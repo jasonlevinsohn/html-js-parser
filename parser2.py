@@ -5,6 +5,7 @@ import sys, re
 class myHParser(HTMLParser):
     tempTag = None
     hasLocale = False
+    isScriptTag = False
     quick_help_array = []
     inner_html_array = []
         
@@ -24,11 +25,24 @@ class myHParser(HTMLParser):
 
 
     def handle_starttag(self, tag, attrs):
-        hasLocale = False
+        self.hasLocale = False
         self.tempTag = tag;
+
+        # Check for a the script tag
+        if tag == 'script':
+            self.isScriptTag = True
+
+
+        # Check for existense first
         for a in attrs:
-            if a[0] == 'data-quickhelp':
-                self.quick_help_array.append(a[1])
+            # Check for existense
+            if a[0] == 'data-i18n':
+                self.hasLocale = True
+
+        if self.hasLocale == False and self.isScriptTag == False:
+            for a in attrs:
+                if a[0] == 'data-quickhelp':
+                    self.quick_help_array.append(a[1])
 
 
     # def handle_endtag(self, tag):
@@ -36,7 +50,8 @@ class myHParser(HTMLParser):
     def handle_data(self, data):
         strippedData = data.strip()
         if len(strippedData) > 0:
-            self.inner_html_array.append(strippedData)
+            if self.hasLocale == False and self.isScriptTag == False:
+                self.inner_html_array.append(strippedData)
         self.tempTag = None
 
 # for line in fileinput.input("regTester.html", inplace=True):
